@@ -191,6 +191,82 @@
   }
   .footnote{margin-top:34px; padding-top:16px; border-top:1px solid var(--line);
     font-size:12px; color:var(--muted-2); line-height:1.6}
+
+  /* ---------- Ask the Coach (AI assistant) ---------- */
+  #coachFab{
+    position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:40;
+    display:flex; align-items:center; gap:8px;
+    background:var(--hi-vis); color:#14161a; border:none; cursor:pointer;
+    font-family:"Barlow Semi Condensed",sans-serif; font-weight:700; font-size:15px;
+    letter-spacing:.4px; text-transform:uppercase;
+    padding:12px 18px; border-radius:999px;
+    box-shadow:0 4px 18px rgba(0,0,0,.45);
+  }
+  #coachFab:active{transform:scale(.97)}
+  #coachFab .cfIco{font-size:17px; line-height:1}
+
+  #coachPanel{
+    position:fixed; z-index:60; left:0; right:0; bottom:0; top:8%;
+    max-width:var(--maxw); margin:0 auto;
+    background:var(--surface); border:1px solid var(--line); border-bottom:none;
+    border-radius:18px 18px 0 0;
+    display:flex; flex-direction:column;
+    box-shadow:0 -8px 40px rgba(0,0,0,.55);
+  }
+  #coachPanel[hidden]{display:none}
+  .coach-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px 10px; border-bottom:1px solid var(--line);
+  }
+  .coach-head .hazardline{position:absolute; left:0; right:0; top:0; height:5px;
+    border-radius:18px 18px 0 0; overflow:hidden;
+    background:repeating-linear-gradient(45deg,var(--hi-vis) 0 14px,#14161a 14px 28px); opacity:.9}
+  .coach-title .mark{font-family:"Barlow Semi Condensed",sans-serif; font-weight:700; font-size:19px}
+  .coach-title .mark b{color:var(--hi-vis)}
+  .coach-sub{display:block; font-family:"Barlow Condensed",sans-serif; font-weight:600;
+    text-transform:uppercase; letter-spacing:1.6px; font-size:10.5px; color:var(--muted); margin-top:2px}
+  #coachClose{
+    background:var(--surface-3); border:none; color:var(--muted); width:34px; height:34px;
+    border-radius:9px; font-size:16px; cursor:pointer;
+  }
+  .coach-msgs{
+    flex:1 1 auto; overflow-y:auto; padding:16px;
+    display:flex; flex-direction:column; gap:12px; -webkit-overflow-scrolling:touch;
+  }
+  .cmsg{max-width:88%; padding:11px 13px; border-radius:14px; font-size:14.5px; line-height:1.55; white-space:normal}
+  .cmsg.user{align-self:flex-end; background:var(--hi-vis); color:#14161a;
+    border-bottom-right-radius:4px; font-weight:500}
+  .cmsg.bot{align-self:flex-start; background:var(--surface-2); border:1px solid var(--line);
+    border-bottom-left-radius:4px; color:var(--text)}
+  .cmsg.bot.thinking{color:var(--muted); font-style:italic}
+  .cmsg.bot .citerow{margin-top:10px; display:flex; flex-wrap:wrap; gap:6px}
+  .cmsg.bot .cite{
+    background:rgba(255,180,0,.1); border:1px solid rgba(255,180,0,.35); color:var(--hi-vis-soft);
+    font-family:"Barlow Condensed",sans-serif; font-weight:600; letter-spacing:.4px;
+    font-size:12px; text-transform:uppercase; padding:6px 10px; border-radius:8px; cursor:pointer;
+    text-align:left; line-height:1.3;
+  }
+  .cmsg.bot .cite:hover{background:rgba(255,180,0,.18)}
+  .coach-inrow{
+    display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--line);
+  }
+  .coach-inrow input{
+    flex:1 1 auto; padding:13px 14px; font-size:16px; color:var(--text);
+    background:var(--surface-2); border:1px solid var(--line); border-radius:12px;
+    font-family:inherit; outline:none; min-width:0;
+  }
+  .coach-inrow input:focus{border-color:var(--hi-vis); box-shadow:0 0 0 3px rgba(255,180,0,.15)}
+  .coach-inrow button{
+    flex:0 0 auto; background:var(--hi-vis); color:#14161a; border:none; cursor:pointer;
+    font-family:"Barlow Semi Condensed",sans-serif; font-weight:700; font-size:15px;
+    text-transform:uppercase; letter-spacing:.5px; padding:0 20px; border-radius:12px;
+  }
+  .coach-inrow button:disabled{opacity:.5; cursor:default}
+  .coach-foot{
+    padding:6px 14px calc(10px + env(safe-area-inset-bottom));
+    font-size:11px; color:var(--muted-2); text-align:center;
+    font-family:"Barlow Condensed",sans-serif; letter-spacing:.4px; text-transform:uppercase; font-weight:600;
+  }
 </style>
 </head>
 <body>
@@ -239,6 +315,31 @@
 
   <section class="detail" id="detailview" aria-live="polite"></section>
 </main>
+
+<!-- ---------- Ask the Coach (AI assistant) ---------- -->
+<button id="coachFab" aria-label="Open Ask the Coach">
+  <span class="cfIco" aria-hidden="true">&#9968;</span><span>Ask the Coach</span>
+</button>
+
+<div id="coachPanel" role="dialog" aria-modal="true" aria-label="Ask the Coach" hidden>
+  <div class="coach-head">
+    <div class="hazardline" aria-hidden="true"></div>
+    <div class="coach-title">
+      <span class="mark">Ask the <b>Coach</b></span>
+      <span class="coach-sub">AI answers from your SOPs</span>
+    </div>
+    <button id="coachClose" aria-label="Close the Coach">&#10005;</button>
+  </div>
+  <div class="coach-msgs" id="coachMsgs">
+    <div class="cmsg bot">Ask me anything covered by the SOPs &mdash; for example &ldquo;What do I do with returned concrete?&rdquo; or &ldquo;Walk me through a roadside inspection.&rdquo; I answer straight from the manual and link you to the exact SOP.</div>
+  </div>
+  <form class="coach-inrow" id="coachForm">
+    <input id="coachInput" type="text" autocomplete="off" autocapitalize="sentences"
+           placeholder="Type a question&hellip;" aria-label="Question for the Coach" />
+    <button type="submit" id="coachSend">Ask</button>
+  </form>
+  <div class="coach-foot">AI-generated from SOP text &mdash; verify anything safety-critical with your supervisor</div>
+</div>
 
 <script>
 /* ============================================================================
@@ -3376,6 +3477,25 @@ const INDEX = SOPS.map(sop=>{
 /* ---------------- Search ---------------- */
 function tokenize(q){ return q.toLowerCase().trim().split(/\s+/).filter(Boolean); }
 
+/* Domain synonyms — used only as a tier-3 fallback so exact matches always win.
+   Add pairs here as crews report "I searched X and got nothing." */
+const SYNONYMS = {
+  "pretrip":["dvir"], "pre-trip":["dvir"], "posttrip":["dvir"], "post-trip":["dvir"],
+  "inspection":["dvir"], "dvir":["pre-trip","inspection"],
+  "washdown":["washout"], "washout":["washdown"],
+  "eticket":["ticket"], "e-ticket":["ticket"],
+  "tablet":["digitalfleet","bridge"], "digitalfleet":["tablet"],
+  "kcr":["key customer requirement"], "kcrs":["key customer requirement"],
+  "police":["officer","roadside"], "cop":["officer","roadside"],
+  "spacing":["placement rate"],
+  "rained":["rain"], "raining":["rain"]
+};
+function expandWords(words){
+  const out = new Set(words);
+  words.forEach(w=> (SYNONYMS[w]||[]).forEach(s=> out.add(s)));
+  return [...out];
+}
+
 function search(raw){
   const q = raw.trim();
   const POOL = INDEX.filter(x=> inDept(x.sop));
@@ -3392,16 +3512,17 @@ function search(raw){
     tier=2; hits = POOL.filter(x=> words.every(w=> x.searchText.includes(w)))
       .map(x=> ({entry:x, line:bestLine(x, ql, words, 2)}));
   }
-  // Tier 3: any word
+  // Tier 3: any word, synonym-expanded (fallback only — exact tiers always win)
   if(!hits.length){
-    tier=3; hits = POOL.filter(x=> words.some(w=> x.searchText.includes(w)))
-      .map(x=> ({entry:x, line:bestLine(x, ql, words, 3)}));
+    const xwords = expandWords(words);
+    tier=3; hits = POOL.filter(x=> xwords.some(w=> x.searchText.includes(w)))
+      .map(x=> ({entry:x, line:bestLine(x, ql, xwords, 3)}));
   }
 
   // rank: more matched words first, title matches boosted
   hits.forEach(h=>{
     const t = h.entry.sop.title.toLowerCase();
-    h.score = (t.includes(ql)?100:0) + words.filter(w=>t.includes(w)).length*8 + h.matchCount;
+    h.score = (t.includes(ql)?100:0) + words.filter(w=>t.includes(w)).length*8 + (h.entry._mc||0);
   });
   hits.sort((a,b)=> b.score-a.score);
   return {tier, hits, words, phrase:ql};
@@ -3589,6 +3710,122 @@ filterEl.addEventListener("click", (e)=>{
   activeDept = btn.dataset.dept;
   filterEl.querySelectorAll(".fpill").forEach(b=> b.classList.toggle("active", b===btn));
   run();
+});
+
+/* ================================================================
+   ASK THE COACH — AI assistant
+   Answers questions using ONLY the SOP text above. Retrieval runs
+   right here in the browser (reusing the same search index), so
+   each question sends just the 3 most relevant SOPs to the Worker.
+
+   SETUP (one time): deploy worker.js to Cloudflare (see
+   SETUP-GUIDE.md), then paste the Worker URL below and re-upload
+   this file to GitHub. Until then, the Coach shows a setup note.
+================================================================ */
+const COACH_URL = "PASTE-YOUR-WORKER-URL-HERE"; // e.g. "https://bb-coach.yourname.workers.dev"
+
+/* Pick the most relevant SOPs for a question, across ALL departments.
+   Uses its own scorer (word frequency + title boost + phrase boost) so the
+   Coach's context quality doesn't depend on the list-view ranking. */
+const COACH_STOP = new Set(("what when where how why do does did i my me the a an and or for with " +
+  "to of in on is are it its you your we our at from can could should would about if any some steps step procedure").split(" "));
+function retrieveForCoach(question, k){
+  const phrase = question.toLowerCase().trim();
+  const words = expandWords(tokenize(question)).filter(w=> w.length>2 && !COACH_STOP.has(w));
+  if(!words.length) return [];
+  const scored = [];
+  INDEX.forEach(entry=>{
+    const st = entry.searchText, title = entry.sop.title.toLowerCase();
+    let s = 0;
+    words.forEach(w=>{
+      let c = 0, i = st.indexOf(w);
+      while(i > -1 && c < 5){ c++; i = st.indexOf(w, i + w.length); }
+      s += c * 3;
+      if(title.includes(w)) s += 25;
+    });
+    if(phrase.length > 6 && st.includes(phrase)) s += 60;
+    if(s > 0) scored.push({entry, s});
+  });
+  scored.sort((a,b)=> b.s - a.s);
+  return scored.slice(0, k||3).map(x=> x.entry);
+}
+function sopPlainText(entry, maxLen){
+  const s = entry.sop, cap = maxLen||4500;
+  let txt = "SOP "+s.code+" \u2014 "+s.title+" (Role: "+(s.role||"General")+")\n";
+  txt += entry.lines.map(l=> l.tableText!=null ? l.tableText : l.plain).join("\n");
+  return txt.length>cap ? txt.slice(0,cap)+" \u2026" : txt;
+}
+
+const coachFab=$("#coachFab"), coachPanel=$("#coachPanel"), coachMsgs=$("#coachMsgs"),
+      coachForm=$("#coachForm"), coachInput=$("#coachInput"),
+      coachSendBtn=$("#coachSend"), coachCloseBtn=$("#coachClose");
+
+function coachOpen(){ coachPanel.hidden=false; coachFab.style.display="none"; setTimeout(()=>coachInput.focus(),50); }
+function coachClose(){ coachPanel.hidden=true; coachFab.style.display=""; }
+coachFab.addEventListener("click", coachOpen);
+coachCloseBtn.addEventListener("click", coachClose);
+
+function coachAdd(cls, html){
+  const d=document.createElement("div");
+  d.className="cmsg "+cls; d.innerHTML=html;
+  coachMsgs.appendChild(d);
+  coachMsgs.scrollTop=coachMsgs.scrollHeight;
+  return d;
+}
+
+coachForm.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const q = coachInput.value.trim();
+  if(!q) return;
+  coachAdd("user", esc(q));
+  coachInput.value="";
+
+  if(COACH_URL.indexOf("PASTE-")>-1){
+    coachAdd("bot","The Coach isn\u2019t connected yet. Deploy the Cloudflare Worker from SETUP-GUIDE.md, then paste its URL into <span class=\"mono\">COACH_URL</span> near the bottom of this file.");
+    return;
+  }
+  if(!navigator.onLine){
+    coachAdd("bot","You\u2019re offline. SOP browsing and search still work \u2014 the Coach needs a connection.");
+    return;
+  }
+
+  const entries = retrieveForCoach(q, 3);
+  const context = entries.map(en=> sopPlainText(en)).join("\n\n-----\n\n");
+  const thinking = coachAdd("bot thinking","Checking the SOPs\u2026");
+  coachSendBtn.disabled = true;
+
+  try{
+    const r = await fetch(COACH_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({question:q, context:context})
+    });
+    thinking.remove();
+    if(!r.ok){
+      if(r.status===429){
+        coachAdd("bot","The Coach hit today\u2019s free usage limit \u2014 it resets at midnight UTC (6\u00a0PM Central). Regular search above still works.");
+      } else {
+        coachAdd("bot","Couldn\u2019t reach the Coach (error "+r.status+"). Try again in a minute, or use search above. If it keeps happening, tell your supervisor.");
+      }
+      return;
+    }
+    const data = await r.json();
+    const cites = entries.map(en=>
+      "<button class=\"cite\" data-sop=\""+en.sop.id+"\">SOP "+esc(String(en.sop.code))+" \u00b7 "+esc(en.sop.title)+"</button>"
+    ).join("");
+    const el = coachAdd("bot",
+      esc(data.answer||"(no answer returned)").replace(/\n/g,"<br>") +
+      (cites ? "<div class=\"citerow\">"+cites+"</div>" : "")
+    );
+    el.querySelectorAll(".cite").forEach(b=> b.addEventListener("click", ()=>{
+      coachClose(); openDetail(b.dataset.sop);
+    }));
+  } catch(err){
+    thinking.remove();
+    coachAdd("bot","Network problem reaching the Coach. Check your signal and try again \u2014 search above still works offline.");
+  } finally {
+    coachSendBtn.disabled = false;
+  }
 });
 
 run(); // initial: show all
